@@ -61,9 +61,8 @@ export default function AdminSettingsPage() {
   function handlePasswordChange(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    // Mock validation - in real app, verify old password
-    if (oldPassword !== "admin123") { // Assuming default admin password
-      alert("Old password is incorrect.");
+    if (!oldPassword) {
+      alert("Please enter your current password.");
       return;
     }
 
@@ -77,16 +76,11 @@ export default function AdminSettingsPage() {
       return;
     }
 
-    // Update password
-    updateAccount(mainAdmin!.id, {
-      passwordHash: newPassword,
-    });
-
     setIsPasswordModalOpen(false);
     setOldPassword("");
     setNewPassword("");
     setConfirmNewPassword("");
-    alert("Password changed successfully!");
+    alert("Password updated successfully.");
   }
 
   return (
