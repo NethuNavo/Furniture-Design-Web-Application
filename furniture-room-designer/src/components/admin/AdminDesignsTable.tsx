@@ -1,232 +1,140 @@
-"use client"; // Required for client-side React features (useState, useRouter, etc.)
+"use client";
 
-// Next.js navigation hook for routing
 import { useRouter } from "next/navigation";
-
-// React hooks
 import { useMemo, useState } from "react";
+import { Eye, Trash2 } from "lucide-react";
 
-// Icons
-import { AlertTriangle, Eye, Trash2 } from "lucide-react";
-
-/**
- * Type definition for each design row
- */
 export type AdminDesignRow = {
-  id: string;                 // unique design ID
-  title: string;              // design name
-  roomWidth: number;          // width (in cm)
-  roomHeight: number;         // height (in cm)
-  itemCount: number;          // number of furniture items
-  createdAt: string;          // date created (ISO string)
+  id: string;
+  title: string;
+  roomWidth: number;
+  roomHeight: number;
+  itemCount: number;
+  createdAt: string;
   user?: {
-    name?: string | null;     // user name
-    email?: string | null;    // user email
+    name?: string | null;
+    email?: string | null;
   };
-  wallColor?: string | null;  // preview wall color
-  floorColor?: string | null; // preview floor color
+  wallColor?: string | null;
+  floorColor?: string | null;
 };
 
-/**
- * Props passed to component
- */
 type AdminDesignsTableProps = {
-  designs: AdminDesignRow[]; // list of designs
-  isMock?: boolean;          // if using mock data
-  isDark?: boolean;          // theme toggle
+  designs: AdminDesignRow[];
+  isDark?: boolean;
 };
 
-/**
- * Main component
- */
-export default function AdminDesignsTable({
-  designs: initialDesigns,
-  isMock,
-  isDark = false,
-}: AdminDesignsTableProps) {
-
+export default function AdminDesignsTable({ designs: initialDesigns, isDark = false }: AdminDesignsTableProps) {
   const router = useRouter();
-
-  // Local state for designs
   const [designs, setDesigns] = useState(initialDesigns);
 
-  // Track which design is being deleted
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const sortedDesigns = useMemo(
+    () => [...designs].sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
+    [designs],
+  );
 
-  // Check if designs exist
-  const hasDesigns = designs.length > 0;
-
-  /**
-   * Sort designs by newest first
-   */
-  const sortedDesigns = useMemo(() => {
-    return [...designs].sort((a, b) =>
-      a.createdAt < b.createdAt ? 1 : -1
-    );
-  }, [designs]);
-
-  /**
-   * Format date nicely
-   */
   const formattedDate = (iso: string) => {
     try {
-      return new Date(iso).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
+      return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     } catch {
       return iso;
     }
   };
 
-  /**
-   * Navigate to design view page
-   */
-  const handleView = (designId: string) => {
-    router.push(`/room-designer?designId=${encodeURIComponent(designId)}`);
-  };
-
-  /**
-   * Navigate to 3D design view
-   */
   const handleView3D = (designId: string) => {
     router.push(`/room-designer/3d?designId=${encodeURIComponent(designId)}`);
   };
 
-  /**
-   * Delete design from backend
-   */
-  const handleDelete = async (designId: string) => {
-    if (!confirm("Delete this design? This cannot be undone.")) return;
-
-    setDeletingId(designId);
-
-    try {
-      const res = await fetch("/api/designs", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: designId }),
-      });
-
-      if (!res.ok) throw new Error("Failed to delete");
-
-      // Remove from UI
-      setDesigns((current) =>
-        current.filter((design) => design.id !== designId)
-      );
-    } catch (error) {
-      console.error(error);
-      window.alert("Unable to delete design.");
-    } finally {
-      setDeletingId(null);
-    }
+  const handleDelete = (designId: string) => {
+    if (!confirm("Remove this design from the list?")) return;
+    setDesigns((current) => current.filter((d) => d.id !== designId));
   };
 
-  /**
-   * Small preview card (wall + floor)
-   */
   const renderPreview = (design: AdminDesignRow) => {
     const wall = design.wallColor ?? (isDark ? "#1e40af" : "#dbeafe");
     const floor = design.floorColor ?? (isDark ? "#1e293b" : "#bfdbfe");
-
     return (
-      <div
-        className={`flex h-14 w-20 flex-col rounded-2xl border ${
-          isDark
-            ? "border-blue-700/50 bg-blue-950/20"
-            : "border-blue-300/50 bg-blue-50/20"
-        }`}
-      >
+      <div className={`flex h-14 w-20 flex-col overflow-hidden rounded-2xl border ${isDark ? "border-blue-700/50" : "border-blue-300/50"}`}>
         <div className="h-6" style={{ backgroundColor: wall }} />
         <div className="h-8" style={{ backgroundColor: floor }} />
       </div>
     );
   };
 
-  /**
-   * EMPTY STATE UI
-   */
-  if (!hasDesigns) {
+  if (designs.length === 0) {
     return (
-      <p className="text-blue-400 text-left">
-        {isMock
-          ? "Connect to your backend database to start seeing saved designs here."
-          : "There are no saved room designs yet. Users can save designs from the room designer."}
+      <p className={isDark ? "text-blue-300" : "text-stone-500"}>
+        No saved room designs yet. Users can save designs from the room designer.
       </p>
     );
   }
 
-  /**
-   * MAIN TABLE UI
-   */
   return (
     <div
-      className={`rounded-2xl border p-6 ${
-        isDark
-          ? "border-blue-700/50 bg-gradient-to-br from-blue-950/20 to-slate-900/10"
-          : "border-blue-300/50 bg-gradient-to-br from-blue-50/20 to-slate-50/10"
-      }`}
+      className={[
+        "overflow-hidden rounded-[1.5rem] border",
+        isDark ? "border-blue-700/50 bg-blue-950/20" : "border-blue-300/50 bg-blue-50/20",
+      ].join(" ")}
     >
-      {/* Header */}
-      <div className="flex justify-between">
-        <h3 className={isDark ? "text-blue-100" : "text-blue-900"}>
-          Saved room designs
-        </h3>
-        <span className={isDark ? "text-blue-200" : "text-stone-500"}>{sortedDesigns.length} designs</span>
+      <div
+        className={[
+          "grid grid-cols-[80px_minmax(0,1.5fr)_1fr_1fr_60px_1fr_auto] gap-3 px-5 py-3 text-xs font-semibold uppercase tracking-[0.18em]",
+          isDark ? "bg-blue-900/40 text-blue-300" : "bg-blue-100/60 text-stone-500",
+        ].join(" ")}
+      >
+        <span>Preview</span>
+        <span>Design</span>
+        <span>User</span>
+        <span>Room</span>
+        <span>Items</span>
+        <span>Date</span>
+        <span>Action</span>
       </div>
 
-      {/* Table */}
-      <table className="w-full mt-4">
-        <thead>
-          <tr className={isDark ? "text-blue-200" : "text-stone-500"}>
-            <th>Preview</th>
-            <th>Design</th>
-            <th>User</th>
-            <th>Room</th>
-            <th>Items</th>
-            <th>Date</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-
-        <tbody className={isDark ? "text-blue-100" : "text-blue-900"}>
-          {sortedDesigns.map((design) => (
-            <tr key={design.id} className="border-b border-blue-200/20">
-              <td>{renderPreview(design)}</td>
-
-              <td>{design.title}</td>
-
-              <td>{design.user?.email ?? "Unknown"}</td>
-
-              <td>
-                {Math.round(design.roomWidth / 100)}m ×{" "}
-                {Math.round(design.roomHeight / 100)}m
-              </td>
-
-              <td>{design.itemCount}</td>
-
-              <td>{formattedDate(design.createdAt)}</td>
-
-              <td className="space-x-2">
-                {/* View 3D button */}
-                <button onClick={() => handleView3D(design.id)} className="text-emerald-600 hover:text-emerald-700 mr-2" title="View 3D">
-                  <Eye size={16} />
-                </button>
-
-                {/* Delete button */}
-                <button
-                  onClick={() => handleDelete(design.id)}
-                  disabled={deletingId === design.id}
-                  className="text-red-500 hover:text-red-600 disabled:opacity-50"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="divide-y divide-blue-200/20">
+        {sortedDesigns.map((design) => (
+          <div
+            key={design.id}
+            className={[
+              "grid grid-cols-[80px_minmax(0,1.5fr)_1fr_1fr_60px_1fr_auto] items-center gap-3 px-5 py-4 text-sm",
+              isDark ? "text-blue-100" : "text-blue-900",
+            ].join(" ")}
+          >
+            {renderPreview(design)}
+            <span className="font-medium">{design.title}</span>
+            <span className={isDark ? "text-blue-300/75" : "text-stone-500"}>{design.user?.email ?? "Unknown"}</span>
+            <span className={isDark ? "text-blue-300/75" : "text-stone-500"}>
+              {Math.round(design.roomWidth / 100)}m × {Math.round(design.roomHeight / 100)}m
+            </span>
+            <span className={isDark ? "text-blue-300/75" : "text-stone-500"}>{design.itemCount}</span>
+            <span className={isDark ? "text-blue-300/75" : "text-stone-500"}>{formattedDate(design.createdAt)}</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleView3D(design.id)}
+                title="View in 3D"
+                className={[
+                  "inline-flex h-8 w-8 items-center justify-center rounded-full border transition",
+                  isDark ? "border-blue-700 bg-blue-900/60 text-blue-200 hover:bg-blue-800" : "border-blue-300 bg-white/80 text-blue-700 hover:bg-blue-50",
+                ].join(" ")}
+              >
+                <Eye className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(design.id)}
+                title="Remove design"
+                className={[
+                  "inline-flex h-8 w-8 items-center justify-center rounded-full border transition",
+                  isDark ? "border-stone-600 bg-stone-900/75 text-stone-100 hover:bg-stone-800" : "border-stone-300 bg-white/85 text-charcoal hover:bg-stone-50",
+                ].join(" ")}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
