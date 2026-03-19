@@ -1,0 +1,34 @@
+{
+  "users": [
+    {
+      "id": "demo-user-1773720493878",
+      "name": "janani",
+      "email": "jananinethara@gmail.com",
+      "passwordHash": "8b71d0c988b2debf36e0f22039eb4b10:e1aa95a8db9a69f54872627dc6e83142ead6547e9d29acbd42e50c8933eb2150c79f9c3937207987a4b5081dd302baca2ad79a110d732d9b025cbe3b3a4f9b0e",
+      "role": "customer",
+      "avatarUrl": null,
+      "createdAt": "2026-03-17T04:08:13.978Z",
+      "updatedAt": "2026-03-17T04:08:13.978Z"
+    },
+    {
+      "id": "demo-admin-1773720835725",
+      "name": "Admin User",
+      "email": "admin@nord.com",
+      "passwordHash": "2668de40ba565fe3e839e7d3120ff326:1cf7c8562bed8a40552833eb99ffe39f9a58f0ba0dc509ec396d5df99a0d1e19ec23cd5efaa2ccc21b77cceb15045705303798944eada47b260c328469e0519b",
+      "role": "admin",
+      "avatarUrl": null,
+      "createdAt": "2026-03-17T04:13:56.181Z",
+      "updatedAt": "2026-03-17T04:13:56.181Z"
+    },
+    {
+      "id": "demo-user-1773831678936",
+      "name": "Janani Welikala",
+      "email": "teshaninethara@gmail.com",
+      "passwordHash": "36c3a7820944eaa2652028d6458a7047:e87da3846f0866e9ae6311397a9ffd0cc5cd32581be4620a809b074e0d472259ebd0552a6025352511d4df59505a502977f9020cc6c58ba76fea8e7787ffc55c",
+      "role": "customer",
+      "avatarUrl": null,
+      "createdAt": "2026-03-18T11:01:19.103Z",
+      "updatedAt": "2026-03-18T11:01:19.103Z"
+    }
+  ]
+}
