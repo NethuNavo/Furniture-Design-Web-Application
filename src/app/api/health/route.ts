@@ -6,4 +6,3 @@ export async function GET() {
     message: "Nord Living backend is running.",
   });
 }
-
