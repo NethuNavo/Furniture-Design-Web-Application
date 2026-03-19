@@ -2,75 +2,50 @@
 
 import { useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
-
-export type SavedDesign = {
-  id: string;
-  title: string;
-  roomWidth: number;
-  roomHeight: number;
-  roomShape: string;
-  wallColor: string;
-  floorColor: string;
-  itemCount: number;
-  items: unknown;
-  createdAt: string;
-  updatedAt: string;
-};
+import {
+  getSavedDesigns,
+  saveDesign,
+  deleteSavedDesign,
+  updateSavedDesign,
+  type SavedDesign,
+} from "@/lib/savedDesigns";
 
 export function useDesigns() {
   const { user } = useAuth();
   const [designs, setDesigns] = useState<SavedDesign[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch user's designs
   const fetchDesigns = useCallback(async () => {
     if (!user?.email) return;
 
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/designs?email=${encodeURIComponent(user.email)}`);
-
-      if (!response.ok) {
-        // Silently fail and set empty designs
-        setDesigns([]);
-        return;
-      }
-
-      const data = await response.json() as { designs: SavedDesign[] };
-      setDesigns(data.designs ?? []);
+      const localDesigns = getSavedDesigns();
+      setDesigns(localDesigns ?? []);
     } catch (error) {
-      // Silently fail and set empty designs
+      console.error("Error fetching designs:", error);
       setDesigns([]);
     } finally {
       setIsLoading(false);
     }
   }, [user?.email]);
 
-  // Create new design
   const createDesign = useCallback(
-    async (designData: Omit<SavedDesign, "id" | "createdAt" | "updatedAt">) => {
+    async (designData: Omit<SavedDesign, "id" | "updatedAt">) => {
       if (!user?.email) {
         throw new Error("User must be logged in");
       }
 
       try {
-        const response = await fetch("/api/designs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: user.email,
-            ...designData,
-          }),
-        });
+        const design: SavedDesign = {
+          id: `design-${Date.now()}`,
+          ...designData,
+          updatedAt: new Date().toISOString(),
+        };
 
-        if (!response.ok) {
-          const error = await response.json() as { error?: string };
-          throw new Error(error.error || "Failed to save design");
-        }
-
-        const data = await response.json() as { design: SavedDesign };
-        setDesigns((prev) => [data.design, ...prev]);
-        return data.design;
+        saveDesign(design);
+        setDesigns((prev) => [design, ...prev.filter((item) => item.id !== design.id)]);
+        return design;
       } catch (error) {
         console.error("Error creating design:", error);
         throw error;
@@ -79,29 +54,20 @@ export function useDesigns() {
     [user?.email]
   );
 
-  // Update design
   const updateDesign = useCallback(
     async (designId: string, updates: Partial<SavedDesign>) => {
       try {
-        const response = await fetch("/api/designs", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: designId,
-            ...updates,
-          }),
-        });
+        updateSavedDesign(designId, updates);
+        const refreshed = getSavedDesigns();
+        const updated = refreshed.find((design) => design.id === designId);
 
-        if (!response.ok) {
-          const error = await response.json() as { error?: string };
-          throw new Error(error.error || "Failed to update design");
+        setDesigns(refreshed);
+
+        if (!updated) {
+          throw new Error("Failed to update design");
         }
 
-        const data = await response.json() as { design: SavedDesign };
-        setDesigns((prev) =>
-          prev.map((design) => (design.id === designId ? data.design : design))
-        );
-        return data.design;
+        return updated;
       } catch (error) {
         console.error("Error updating design:", error);
         throw error;
@@ -110,20 +76,9 @@ export function useDesigns() {
     []
   );
 
-  // Delete design
   const deleteDesign = useCallback(async (designId: string) => {
     try {
-      const response = await fetch("/api/designs", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: designId }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json() as { error?: string };
-        throw new Error(error.error || "Failed to delete design");
-      }
-
+      deleteSavedDesign(designId);
       setDesigns((prev) => prev.filter((design) => design.id !== designId));
     } catch (error) {
       console.error("Error deleting design:", error);
