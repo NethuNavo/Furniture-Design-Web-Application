@@ -1,8 +1,8 @@
 # Furniture Design Web Application
 
-<<<<<<< HEAD
+
 This project is a web application for furniture visualization and room design.
-=======
+
 ## Overview
 This project is a web-based Furniture Room Designer that allows users to design and visualize furniture arrangements inside a room.
 
@@ -51,4 +51,3 @@ The goal of this project is to improve user experience in interior design planni
   
 -  10952762 - Waduge  Fernanando
 -  Contribution - Developed the public website including home, shop, about, and contact pages, along with navbar, footer, and global styles. Created low-fidelity designs and the design system in Figma.
->>>>>>> 313e6a3458fecef215054d9bf3b0122d437cbd50
