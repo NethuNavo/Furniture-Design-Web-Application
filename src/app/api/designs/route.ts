@@ -21,8 +21,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ designs: user?.designs ?? [] });
   } catch (error) {
     console.error("Fetch designs error:", error);
-    // Return empty designs instead of error to prevent console spam
-    return NextResponse.json({ designs: [] });
+    return NextResponse.json({ error: "Could not load designs." }, { status: 500 });
   }
 }
 
